@@ -1,0 +1,26 @@
+.header{
+    background-color:white;
+    font-size: 20px;
+    font-weight: bolder;
+    color:aqua;
+}
+
+.logo{
+    
+}
+
+.user{
+    float: right;
+    font-weight: normal;
+    font-size: 15px;
+}
+
+.sectioncentent{
+    padding: 32px;
+    
+}
+
+
+.setionInner{
+    height: calc(100vh - 64px);
+}
