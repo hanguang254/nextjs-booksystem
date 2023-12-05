@@ -2,27 +2,25 @@ import {
   Button, 
   Col, 
   Form, 
-  Input, 
   Row, 
   Select, 
   Space, 
   Table, 
   TablePaginationConfig,
   Image,
-  message
+  message,
+  Tag
  } from 'antd'
 import { useRouter } from 'next/router'
 import React, { useEffect, useState } from 'react'
-import axios from 'axios'
-
 import styles from './index.module.css'
-
-import {bookDelete, getBookList} from '@/api/book'
-import { BookQueryType, CategoryType } from '@/type'
+import {borrowDelete, getBorrowList} from '@/api/borrow'
+import { bookDelete, getBookList } from "@/api/book";
+import { BorrowType, BorrowQueryType,  } from '@/type'
 import dayjs from 'dayjs'
-
 import Content from '@/components/Content'
-import { getCategoryList } from '@/api/category'
+import { log } from 'console'
+
 
 
 const STATUS_OPTIONS =[
@@ -40,9 +38,10 @@ export default function Borrow() {
   const [form] =Form.useForm();
   const router = useRouter();
   const [data,setData] = useState();
-  const [categoryList ,setCategoryList] = useState<CategoryType[]>([]);
+  //todo ts type
+  const [userlist,setUserList] = useState<any[]>([])
 
-  const [booklist,setBookList] = useState([])
+  const [booklist,setBookList] = useState<BorrowType[]>([])
   
 
   const [pagination,setPagination] = useState<TablePaginationConfig>({
@@ -54,21 +53,20 @@ export default function Borrow() {
 
   async function fetchData(search?:any) {
       //数据
-      const res = await getBookList(
+      const res = await getBorrowList(
       {
         current : pagination.current, 
         pageSize : pagination.pageSize,
         ...search
       });
-      // console.log(res);
-      const { data } =res
-      
-      const dataWithKey = data.map((item:object, index:Number) => ({
+
+      const newData = res.data.map((item: BorrowType) => ({
         ...item,
-        key: index.toString(), // 使用数组索引作为key，或者使用item.id（如果有的话）
+        bookName: item.book.name,
+        borrowUser: item.user.nickName,
       }));
-      // console.log(dataWithKey);
-      setData(dataWithKey);
+      setData(newData);
+      
       setPagination({...pagination, total:res.total})
   }
 
@@ -77,9 +75,6 @@ export default function Borrow() {
     getBookList({all:true}).then((res)=>{
       setBookList(res.data)
     })
-    getCategoryList({all:true}).then(res =>{
-      setCategoryList(res.data)
-    })
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
@@ -87,10 +82,20 @@ export default function Borrow() {
   
 
   //搜索点击事件
-  const handleSerchClick=async (values:BookQueryType)=>{
+  const handleSerchClick = async (values:BorrowQueryType)=>{
     // console.log(values);
-    const res = await getBookList({...values,current:1,pageSize:pagination.pageSize})
-    setData(res.data)
+    const res = await getBorrowList({...values,current:1,pageSize:pagination.pageSize})
+
+    // console.log(res.data);
+    
+    const newData = res.data.map((item:BorrowType) =>({
+      ...item,
+      bookName:item.book.name,
+      borrowUser:item.user.nickName,
+    }))
+    console.log(newData);
+    
+    setData(newData)
     setPagination({...pagination,current:1,total:res.total})
   }
 
@@ -102,8 +107,8 @@ export default function Borrow() {
   }
 
   //编辑跳转
-  const handleEditClick = ()=>{
-    router.push('/book/edit/id')
+  const handleEditClick = (id)=>{
+    router.push(`/borrow/edit/${id}`)
   }
 
   //Table事件
@@ -111,7 +116,7 @@ export default function Borrow() {
       console.log(pagination);
       setPagination(pagination)
       const query = form.getFieldsValue()
-      getBookList({
+      getBorrowList({
         current: pagination.current,
         pageSize: pagination.pageSize,
         ...query
@@ -119,64 +124,63 @@ export default function Borrow() {
       
   }
 
-  const columns = [
+  const columns:any = [
     {
       title: '名称',
-      dataIndex: 'name',
-      key: 'name',
-      width:200
+      dataIndex: 'bookName',
+      key: 'bookName',
+      width:20
     },
     {
-      title: '封面',
-      dataIndex: 'cover',
-      key: 'cover',
-      width:120,
-      render:(text:string)=>{
-        return <Image width={100} src={text} alt=''/>
-      }
+      title: "状态",
+      dataIndex: "status",
+      key: "status",
+      width: 10,
+      render: (text: string) =>
+        text === "on" ? (
+          <Tag color="red">借出</Tag>
+        ) : (
+          <Tag color="green">已还</Tag>
+        ),
     },
     {
-      title: '作者',
-      dataIndex: 'author',
-      key: 'author',
-      width:120,
+      title: '借阅人',
+      dataIndex: 'borrowUser',
+      key: 'borrowUser',
+      width:20
     },
     {
-      title: '分类',
-      dataIndex: 'category',
-      key: 'category',
-      width:80
-    },
-    {
-      title: '描述',
-      dataIndex: 'description',
-      key: 'description',
-      width:300
-    },
-    {
-      title: '库存',
-      dataIndex: 'stock',
-      key: 'stock',
-      width:80
-    },
-    {
-      title: '创建时间',
-      dataIndex: 'time',
-      key: 'time',
-      width:120,
+      title: '借阅时间',
+      dataIndex: 'borrowAt',
+      key: 'borrowA',
+      width:20,
       render:(text:string)=> dayjs().format("YYYY-MM-DD")
+    },
+    {
+      title: "归还时间",
+      dataIndex: "backAt",
+      key: "backAt",
+      width: 20,
+      render: (text: string) => dayjs(text).format("YYYY-MM-DD"),
     },
     {
       title: '操作',
       key:'action',
       fixed: 'right',
-      width:120,
+      width:15,
       render: (_:any, record:any) => (
         <Space size="middle">
-          <Button type='link' onClick={handleEditClick}>编辑</Button>
+          <Button type='link' 
+          onClick={()=>{
+            // console.log(record);
+            
+            handleEditClick(record._id)
+          }}>编辑</Button>
           <Button type='link' 
             onClick={()=>{
-              handleDeleteClick(record.id)
+              // console.log(record);
+              
+              handleDeleteClick(record._id)
             }}
             danger>删除</Button>
         </Space>
@@ -185,16 +189,16 @@ export default function Borrow() {
   ];
 
   const handleDeleteClick =async (id:string)=>{
-      await bookDelete(id)
+      await borrowDelete(id)
       message.success('删除成功')
       fetchData(form.getFieldsValue())
   }
 
   return (
-    <Content title='图书列表' operation={
+    <Content title='借阅列表' operation={
       <Button  type='primary'
       onClick={()=>{
-        router.push('/book/add')
+        router.push('/borrow/add')
       }}>
         添加
       </Button>
@@ -236,7 +240,7 @@ export default function Borrow() {
                 showSearch
                 // style={{width:100}}  
                 placeholder='请选择'
-                options={categoryList.map(item =>({
+                options={userlist.map(item =>({
                   label:item.name,value:item._id}))}/>
             </Form.Item>
           </Col>

@@ -4,6 +4,7 @@ export interface BookQueryType{
     category?:number;
     current?:number;
     pageSize?:number;
+    all?:boolean
 }
 
 export interface BookAddType{
