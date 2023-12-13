@@ -1,7 +1,7 @@
 import React, { ReactNode } from 'react';
 import { LaptopOutlined, NotificationOutlined, UserOutlined } from '@ant-design/icons';
 import type { MenuProps } from 'antd';
-import { Breadcrumb, Layout, Menu, theme } from 'antd';
+import { Breadcrumb, Layout, Menu, message, theme } from 'antd';
 import Image from 'next/image';
 import { useRouter } from 'next/router';
 
@@ -12,6 +12,8 @@ import { Dropdown, Space, Divider, Button } from 'antd';
 import styles from './index.module.css'
 import { log } from 'console';
 import Head from 'next/head';
+import Link from 'next/link';
+import { logout } from '@/api/user';
 
 
 const { Header, Content, Sider } = Layout;
@@ -86,20 +88,29 @@ const items3 = [
     }
 ]
 
-const items: MenuProps['items'] = [
+
+
+
+
+function LayoutView({children}:{children:ReactNode}) {
+
+  const items: MenuProps['items'] = [
     {
       key: '1',
-      label: "用户中心" 
+      label: <Link href='/user'>用户中心</Link> 
     },
     {
       key: '2',
-      label:"登出"
+      label:<span onClick={async()=>{
+        await logout()
+        message.success('登出成功！')
+        routes.push('/login')
+      }}>登出</span>
     }
   ];
 
 
 
-function LayoutView({children}:{children:ReactNode}) {
   const {
     token: { colorBgContainer },
   } = theme.useToken();

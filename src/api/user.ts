@@ -12,6 +12,10 @@ export async function getUserList(params?: UserQueryType){
     return res
         
 }
+export async function getUserDetail(id:string){
+    return request.get(`/api/users/${id}`)
+}
+
 
 export async function UserAdd(params:UserType) {
 
@@ -23,5 +27,13 @@ export async function UserDelete(id:number){
 }
 
 export async function UserUpdata(params:UserType) {
-    return request.put(`/api/users/${params._id}`,params);
+    return request.put(`/api/users`,params);
 }
+
+export async function login(params: Pick<UserType, "name" | "password">) {
+    return request.post("/api/login", params);
+  }
+
+export async function logout() {
+    return request.get("/api/logout");
+}  

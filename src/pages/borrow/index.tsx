@@ -170,12 +170,12 @@ export default function Borrow() {
       width:15,
       render: (_:any, record:any) => (
         <Space size="middle">
-          <Button type='link' 
+          {record.status === 'on' && (<Button type='link' 
           onClick={()=>{
             // console.log(record);
             
             handleEditClick(record._id)
-          }}>编辑</Button>
+          }}>归还</Button>)}
           <Button type='link' 
             onClick={()=>{
               // console.log(record);
